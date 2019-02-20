@@ -1,0 +1,38 @@
+---
+title: "Lab2"
+author: "Yuchen Wang"
+date: "2/20/2019"
+output: html_document
+---
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(ggplot2)
+library(sf)
+library(tidyverse)
+city <- read_sf("/data/ME-GIS-master/Cities.shp") %>%
+  na.omit()
+```
+
+```{r, fig.width=9, fig.height=6}
+p <- ggplot() +
+  geom_sf(data = read_sf("/data/ME-GIS-master/Coastline2.shp"), 
+          colour="grey10", fill="grey90") +
+  geom_sf(data = read_sf("/data/ME-GIS-master/Rivers19.shp"), 
+          colour="steelblue", size=0.3) +
+  geom_sf(data = read_sf("/data/ME-GIS-master/PrimaryRoads.shp"), 
+          size = 0.7, colour="grey30") +
+  geom_sf(data = read_sf("/data/ME-GIS-master/Cities.shp")) +
+  geom_sf_text(data = city, aes(geometry,label = Name)) +
+  theme_bw()
+p
+```
+
+```{r}
+library(ggspatial)
+```
+
+```{r fig.width=9, fig.height=6}
+p + 
+  annotation_scale() +
+  annotation_north_arrow(which_north = "true", pad_x = unit(0.25,
+  "cm"), pad_y = unit(2, "cm"))
+```
