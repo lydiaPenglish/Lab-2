@@ -1,0 +1,30 @@
+---
+title: "Lab2-2"
+author: "Yuchen Wang"
+date: "2/20/2019"
+output: html_document
+---
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(ggplot2)
+library(sf)
+library(tidyverse)
+ozbig <- read_sf("/Users/yuchenwang/Documents/Study/STAT585/gadm36_ALB_shp/gadm36_ALB_1.shp")
+#for a smaller country, the tolerance and minarea should be smaller to draw a pretty map
+oz_st <- maptools::thinnedSpatialPoly(
+  as(ozbig, "Spatial"), tolerance = 0.001, 
+  minarea = 0.0001, topologyPreserve = TRUE) 
+oz <- st_as_sf(oz_st)
+f <- function(dframe){
+  dframe <- data.frame(order = c(1:nrow(dframe)), long = dframe$x, lat = dframe$y)
+}
+##If there are only two layer of lists, change the depth into 2 and delete one "flatten()"
+ozplus <- oz$geometry %>% 
+  modify_depth(3,data.frame) %>% 
+  modify_depth(3,f) %>%
+  flatten() %>%
+  flatten() %>%
+  bind_rows(.id = "group")
+ozplus %>% 
+  ggplot(aes(x = long, y = lat, group = group)) + 
+  geom_polygon()
+```
