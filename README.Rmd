@@ -1,0 +1,101 @@
+---
+title: "Lab 2"
+author: "Yuchen Wang, Lydia English, Qing He"
+date: "February 21, 2019"
+output: html_document
+---
+
+Here is the link to our [github repo](https://github.com/lydiaPenglish/Lab-2)
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(ggplot2)
+library(sf)
+library(tidyverse)
+city <- read_sf("data/ME-GIS/Cities.shp") %>%
+  na.omit()
+```
+
+#### Part 1 - Middle Earth
+
+Here is the map of middle earth
+
+```{r, fig.width=9, fig.height=6}
+p <- ggplot() +
+  geom_sf(data = read_sf("data/ME-GIS/Coastline2.shp"), 
+          colour="grey10", fill="grey90") +
+  geom_sf(data = read_sf("data/ME-GIS/Rivers19.shp"), 
+          colour="steelblue", size=0.3) +
+  geom_sf(data = read_sf("data/ME-GIS/PrimaryRoads.shp"), 
+          size = 0.7, colour="grey30") +
+  geom_sf(data = read_sf("data/ME-GIS/Cities.shp")) +
+  theme_bw()
+
+```
+
+And here is the code with the added annotations
+
+```{r fig.width=9, fig.height=6}
+library(ggspatial)
+p + 
+  geom_sf_text(data = city, aes(geometry,label = Name))+
+  annotation_scale() +
+  annotation_north_arrow(which_north = "true", pad_x = unit(0.25,
+  "cm"), pad_y = unit(2, "cm"))
+
+
+```
+
+#### Part 2 - Map of Australia
+
+```{r message = FALSE, warning = FALSE}
+ozbig <- read_sf("data/gadm36_AUS_shp/gadm36_AUS_1.shp")
+oz_st <- maptools::thinnedSpatialPoly(
+  as(ozbig, "Spatial"), tolerance = 0.1, 
+  minarea = 0.001, topologyPreserve = TRUE)
+oz <- st_as_sf(oz_st)
+
+f <- function(dframe){
+  dframe <- data.frame(order = c(1:nrow(dframe)), long = dframe$x, lat = dframe$y)
+}
+## Here our depth is 3, but that could change depending on the file
+ozplus <- oz$geometry %>% 
+  modify_depth(3,data.frame) %>% 
+  modify_depth(3,f) %>%
+  flatten() %>%
+  flatten() %>%
+  bind_rows(.id = "group")
+
+ozplus %>% 
+  ggplot(aes(x = long, y = lat, group = group)) + 
+  geom_polygon(fill = "white", colour = "black", lwd = 1)+
+  theme_bw()+
+  coord_quickmap()
+```
+
+#### Part 3 - Map of another country - Albania
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+ozbig <- read_sf("data/gadm36_ALB_shp/gadm36_ALB_1.shp")
+#for a smaller country, the tolerance and minarea should be smaller to draw a pretty map
+oz_st <- maptools::thinnedSpatialPoly(
+  as(ozbig, "Spatial"), tolerance = 0.001, 
+  minarea = 0.0001, topologyPreserve = TRUE) 
+oz <- st_as_sf(oz_st)
+f <- function(dframe){
+  dframe <- data.frame(order = c(1:nrow(dframe)), long = dframe$x, lat = dframe$y)
+}
+
+ozplus <- oz$geometry %>% 
+  modify_depth(2,data.frame) %>% 
+  modify_depth(2,f) %>%
+  flatten() %>%
+  bind_rows(.id = "group")
+ozplus %>% 
+  ggplot(aes(x = long, y = lat, group = group)) + 
+  geom_polygon(fill = "white", colour = "black", lwd = 1)+
+  theme_bw()+
+  coord_quickmap()
+```
+
+In this example our function still works but since Albania is smaller than Australia we needed to change our map_depth to 2 and remove one of our flatten functions. 
